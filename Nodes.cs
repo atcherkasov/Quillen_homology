@@ -78,7 +78,7 @@ namespace GetEquation
         /// проверяем, что можем снять шаблон и условия продолжут выполняться 
         public static bool couldDelete(Node subTree, ref Node pattern){
             if (subTree.covered > 2){
-                if (subTree.left != null){
+                if (pattern.left != null){
                     return couldDelete(subTree.left, ref pattern.left) && 
                            couldDelete(subTree.right, ref pattern.right);
                 }
