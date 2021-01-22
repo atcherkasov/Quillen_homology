@@ -6,10 +6,14 @@ using System.Threading.Tasks;
 
 namespace GetEquation
 {
-    partial class Node
+    partial class Node //: IComparable<Node>
     {
         public Node(Node parrent){
             this.parrent = parrent;
+        }
+        public Node(Node parrent, int high){
+            this.parrent = parrent;
+            this.high = high;
         }
 
         public Node(){
@@ -17,51 +21,64 @@ namespace GetEquation
         public Node left = null;
         public Node right = null;
         public Node parrent = null;
-        public bool covered = false;
+        public int covered = 0;
+        public int high = 0;
+        public bool isRoot = false;
 
-        /// covering all nodes 
+        // public int CompareTo(Node other) 
+        // {
+        //     if (null == other)
+        //         return 1;
+        //     return int.Compare(this.high, other.high);
+        // }
+
+        /// покрывает все деревья шаблонами 
         public static void TryCoverAll(ref Node curNode, ref Node pattern){
             if (dfs(ref curNode, ref pattern)){
-                // Console.WriteLine("lol");
+                curNode.isRoot = true;
                 coveredingDfs(ref curNode, ref pattern);
             }
-            // Console.WriteLine("gogogo");
             if (curNode.left != null) {
                 TryCoverAll(ref curNode.left, ref pattern);
                 TryCoverAll(ref curNode.right, ref pattern);
             }
         }
 
-        /// return true if trees is same 
+        /// проверяет (с корня), что деревья идентичны (возвращает true)
         public static bool dfs(ref Node tree, ref Node pattern){
-            // Console.WriteLine("1");
             if (pattern.left != null) {
                 if (tree.left != null){
-                    // Console.WriteLine("22");
                     return dfs(ref tree.left, ref pattern.left) && dfs(ref tree.right, ref pattern.right);
                 }
-                // Console.WriteLine("333");
                 return false;
             }
-            // Console.WriteLine(">>>> end");
             return true;
         }
 
-        /// covering nodes by covering pattern one time
+        /// делает одно наложение шаблона и помечает вершины покрытыми 
         public static void coveredingDfs(ref Node tree, ref Node pattern){
+            tree.covered++;
             if (pattern.left != null) {
-                tree.covered = true;
                 coveredingDfs(ref tree.left, ref pattern.left);
                 coveredingDfs(ref tree.right, ref pattern.right);
             }
         }
 
-        /// checking that all nodes are covered
-        public static bool checkCovereding(ref Node tree){
-            if (tree.left != null){
-                if (!tree.covered)
+        /// проверяет, что все вершины покрыты 
+        public static bool checkCovereding(ref Node tree, ref List<Node> roots){
+            if (tree.covered == 0)
+                return false;
+            
+            if (tree.left != null && tree.parrent != null){
+                if (tree.covered < 2)
                     return false;
-                return checkCovereding(ref tree.left) && checkCovereding(ref tree.right);
+            }
+            if (tree.left != null){
+                if (tree.isRoot)
+                    roots.Add(tree);
+                return checkCovereding(ref tree.left, ref roots) &&
+                       checkCovereding(ref tree.right, ref roots);
+
             }
             return true;
         }
@@ -102,15 +119,17 @@ namespace GetEquation
 
         public static void Transfer(ref Node curNode, string brackets)
         {
+            Console.WriteLine(curNode.high);
             // tree[curr] = true;
             if (brackets == "")
                 return;
             int index = close_bracket_index_for_first_break(brackets);
-            curNode.left = new Node(curNode);
-            curNode.right = new Node(curNode);
+            curNode.left = new Node(curNode, curNode.high + 1);
+            curNode.right = new Node(curNode, curNode.high + 1);
             
             Transfer(ref curNode.left, brackets.Substring(1, index - 1));
             Transfer(ref curNode.right, brackets.Substring(index + 1, brackets.Length - index - 1));
+
         }
 
     }
