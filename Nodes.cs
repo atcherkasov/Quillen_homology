@@ -15,7 +15,6 @@ namespace GetEquation
             this.parrent = parrent;
             this.high = high;
         }
-
         public Node(){
         }
         public Node left = null;
@@ -24,13 +23,6 @@ namespace GetEquation
         public int covered = 0;
         public int high = 0;
         public bool isRoot = false;
-
-        // public int CompareTo(Node other) 
-        // {
-        //     if (null == other)
-        //         return 1;
-        //     return int.Compare(this.high, other.high);
-        // }
 
         /// покрывает все деревья шаблонами 
         public static void TryCoverAll(ref Node curNode, ref Node pattern){
@@ -83,24 +75,32 @@ namespace GetEquation
             return true;
         }
 
-        // public static void Transfer(ref string brackets, ref Node curNode, int ind){
-        //     if (ind == brackets.Length - 1)
-        //         return;
-        //     if (brackets[ind] == '(' && brackets[ind + 1] == '(' ) {
-        //         curNode.left = new Node(curNode);
-        //         curNode.right = new Node(curNode);
-        //         Transfer(ref brackets, ref curNode.left, ind + 1);
-        //     }
-        //     if (brackets[ind] == '(' && brackets[ind + 1] == ')' ) {
-        //         Transfer(ref brackets, ref curNode, ind + 1);
-        //     }
-        //     if (brackets[ind] == ')' && brackets[ind + 1] == ')' ){  // todo 
-        //         Transfer(ref brackets, ref curNode.parrent, ind + 1);
-        //     }
-        //     if (brackets[ind] == ')' && brackets[ind + 1] == '(' ){
-        //         Transfer(ref brackets, ref curNode.parrent.right, ind + 1);
-        //     }
-        // }
+        /// проверяем, что можем снять шаблон и условия продолжут выполняться 
+        public static bool couldDelete(Node subTree, ref Node pattern){
+            if (subTree.covered > 2){
+                if (subTree.left != null){
+                    return couldDelete(subTree.left, ref pattern.left) && 
+                           couldDelete(subTree.right, ref pattern.right);
+                }
+                return true;
+            }
+            if (subTree.covered == 2){
+                if (subTree.left == null || subTree.parrent == null)
+                    return true;
+                return false;
+            }
+            return false;
+        }
+
+        /// снимаем шаблон с дерева
+        public static void putOff(Node subTree, ref Node pattern){
+            subTree.covered--;
+            if (pattern.left != null) {
+                    putOff(subTree.left, ref pattern.left);
+                    putOff(subTree.right, ref pattern.right);
+            }
+            return;
+        }
 
         public static int close_bracket_index_for_first_break(string brackets)
         {
@@ -117,10 +117,9 @@ namespace GetEquation
             return -2;
         }
 
+        /// переводит скобочную последовательность в класс Node
         public static void Transfer(ref Node curNode, string brackets)
         {
-            Console.WriteLine(curNode.high);
-            // tree[curr] = true;
             if (brackets == "")
                 return;
             int index = close_bracket_index_for_first_break(brackets);
@@ -131,45 +130,5 @@ namespace GetEquation
             Transfer(ref curNode.right, brackets.Substring(index + 1, brackets.Length - index - 1));
 
         }
-
-    }
-    // public class kek{
-        // static void Main(string[] args)
-        // {
-        //     Node tree = new Node();
-        //     tree.left = new Node();
-        //     tree.right = new Node();
-        //     tree.right.left = new Node();
-        //     tree.right.right = new Node();
-
-        //     Node pattern = new Node();
-        //     pattern.left = new Node();
-        //     pattern.right = new Node();
-
-        //     Console.WriteLine(Node.dfs(ref tree, ref pattern));
-        //     Console.WriteLine(Node.dfs(ref tree, ref pattern.left));
-        //     Console.WriteLine(Node.dfs(ref tree, ref pattern.right));
-
-        //     Console.WriteLine(Node.dfs(ref tree.left, ref pattern));
-        //     Console.WriteLine(Node.dfs(ref tree.right, ref pattern));
-
-
-        //     Console.WriteLine("kekekek");
-
-        //     Node tranf = new Node();
-        //     string brac = "((()())())";
-
-        //     Node.Transfer(ref tranf, brac);
-
-        //     Node kek = tranf.left;
-        //     Node lol = tranf.right;
-        //     Console.WriteLine(kek.left);
-        //     Console.WriteLine(kek.right);
-        //     Console.WriteLine(lol.left);
-        //     Console.WriteLine(lol.right);
-
-        //     int keke = 1;
-        // }
-    // }
-    
+    }    
 }
