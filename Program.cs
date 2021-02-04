@@ -65,7 +65,6 @@ namespace GetEquation
             
             while (curr_pattern != "no")
             {
-                Console.WriteLine("\nновый шаблон");
                 // переводим шаблон в класс Node
                 Node pattern = new Node();
                 Node.Transfer(ref pattern, curr_pattern);
@@ -73,12 +72,13 @@ namespace GetEquation
                 //
                 bool[] patternLit = new bool[(int)Math.Pow(2, m) - 1];
                 Display(ref patternLit, curr_pattern, 0);
+                curr_pattern = Gen_next(curr_pattern);
                 Tree lit = new Tree(patternLit);
+                Console.WriteLine("\nНОВЫЙ ШАБЛОН ");
                 Console.WriteLine(lit.WolframForm());
                 //
-
-                curr_pattern = Gen_next(curr_pattern);
-
+                Console.WriteLine("Деревья с цепями:");
+                
                 // начало цикла по деревьям
                 int cnt = 0;
                 curr_tree = "";
@@ -88,12 +88,25 @@ namespace GetEquation
                     curr_tree += ')';
                 while (curr_tree != "no")
                 {
+                    //
+                    // bool[] treeLit = new bool[(int)Math.Pow(2, n) - 1];
+                    // Display(ref treeLit, curr_tree, 0);
+                    // Tree lit2 = new Tree(treeLit);
+                    //
+                    // // if (lit2.WolframForm() != "Graph[{0->1,0->2,1->3,1->4,4->9,4->10,9->19,9->20,20->41,20->42}]")
+                    // // {curr_tree = Gen_next(curr_tree);
+                    // //     continue;}
+                    // // Console.WriteLine(lit2.WolframForm());
+                    // //
+
+
                     // переводим дерево в класс Node
                     Node tree = new Node();
                     Node.Transfer(ref tree, curr_tree);
 
                     // пытаемся покрыть дерево полностью шаблоном
                     Node.TryCoverAll(ref tree, ref pattern);
+                    
 
                     // проверяем, что дерево удалось покрыть шаблоном
                     List<Node> roots = new List<Node>();
@@ -101,9 +114,8 @@ namespace GetEquation
                         curr_tree = Gen_next(curr_tree);
                         continue;
                     }
-                    
                     roots = roots.OrderBy(o=>-o.high).ToList();
-
+                    
                     //
                     bool[] treeLit = new bool[(int)Math.Pow(2, n) - 1];
                     Display(ref treeLit, curr_tree, 0);
@@ -116,15 +128,15 @@ namespace GetEquation
                     for (int i = 0; i < roots.Count; i++){
                         // можем ли выкинуть шаблон?
                         if (Node.couldDelete(roots[i], ref pattern)){
-                            roots[i].isRoot = false;
+                            roots[i].isRoot = 0;
                             Node.putOff(roots[i], ref pattern);
                         } else
                             chain.Add(roots[i]);
                     }
 
                     curr_tree = Gen_next(curr_tree);
-                    Console.WriteLine(chain.Count);
-                    
+                    Console.WriteLine("Размер цепи: " + chain.Count.ToString());
+
                     // todo: как-нибудь созранить цепь в файл 
                 }
             }
