@@ -74,6 +74,8 @@ namespace GetEquation
                 Display(ref patternLit, curr_pattern, 0);
                 curr_pattern = Gen_next(curr_pattern);
                 Tree lit = new Tree(patternLit);
+                // if (lit.WolframForm() != "Graph[{0->1,0->2,2->5,2->6,6->13,6->14,14->29,14->30,30->61,30->62}]")
+                //     continue;
                 Console.WriteLine("\nНОВЫЙ ШАБЛОН ");
                 Console.WriteLine(lit.WolframForm());
                 //
@@ -88,32 +90,32 @@ namespace GetEquation
                     curr_tree += ')';
                 while (curr_tree != "no")
                 {
-                    //
+                    
                     // bool[] treeLit = new bool[(int)Math.Pow(2, n) - 1];
                     // Display(ref treeLit, curr_tree, 0);
                     // Tree lit2 = new Tree(treeLit);
+                    
+                    // if (lit2.WolframForm() != "Graph[{0->1,0->2,2->5,2->6,6->13,6->14,14->29,14->30,30->61,30->62,62->125,62->126,126->253,126->254}]")
+                    // {curr_tree = Gen_next(curr_tree);
+                    //     continue;}
+                    // Console.WriteLine(lit2.WolframForm());
                     //
-                    // // if (lit2.WolframForm() != "Graph[{0->1,0->2,1->3,1->4,4->9,4->10,9->19,9->20,20->41,20->42}]")
-                    // // {curr_tree = Gen_next(curr_tree);
-                    // //     continue;}
-                    // // Console.WriteLine(lit2.WolframForm());
-                    // //
-
-
+                    
                     // переводим дерево в класс Node
                     Node tree = new Node();
                     Node.Transfer(ref tree, curr_tree);
-
                     // пытаемся покрыть дерево полностью шаблоном
                     Node.TryCoverAll(ref tree, ref pattern);
-                    
-
                     // проверяем, что дерево удалось покрыть шаблоном
                     List<Node> roots = new List<Node>();
                     if (!Node.checkCovereding(ref tree, ref roots)){
                         curr_tree = Gen_next(curr_tree);
                         continue;
                     }
+
+                    foreach (var root in roots)
+                        Console.Write($"{root.number} ");
+                    Console.WriteLine();
                     roots = roots.OrderBy(o=>-o.high).ToList();
                     
                     //
@@ -133,14 +135,15 @@ namespace GetEquation
                         } else
                             chain.Add(roots[i]);
                     }
-
                     curr_tree = Gen_next(curr_tree);
-                    Console.WriteLine("Размер цепи: " + chain.Count.ToString());
+                    foreach (var root in chain)
+                        Console.Write($"{root.number} ");
+                    Console.WriteLine();
+                    Console.WriteLine("Размер покрытия: " + chain.Count.ToString());
 
                     // todo: как-нибудь созранить цепь в файл 
                 }
             }
-
         }
     }
 }
