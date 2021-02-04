@@ -22,12 +22,13 @@ namespace GetEquation
         public Node parrent = null;
         public int covered = 0;
         public int high = 0;
-        public bool isRoot = false;
+        public int isRoot = 0;
+        public int isLeaf = 0;
 
         /// покрывает все деревья шаблонами 
         public static void TryCoverAll(ref Node curNode, ref Node pattern){
             if (dfs(ref curNode, ref pattern)){
-                curNode.isRoot = true;
+                curNode.isRoot++;
                 coveredingDfs(ref curNode, ref pattern);
             }
             if (curNode.left != null) {
@@ -53,21 +54,21 @@ namespace GetEquation
             if (pattern.left != null) {
                 coveredingDfs(ref tree.left, ref pattern.left);
                 coveredingDfs(ref tree.right, ref pattern.right);
-            }
+            } else 
+                tree.isLeaf++;
         }
 
         /// проверяет, что все вершины покрыты 
         public static bool checkCovereding(ref Node tree, ref List<Node> roots){
+            if (tree.isRoot > 0)
+                roots.Add(tree);
             if (tree.covered == 0)
                 return false;
-            
-            if (tree.left != null && tree.parrent != null){
-                if (tree.covered < 2)
-                    return false;
-            }
+            if (tree.left == null)
+                return true;
+            if (tree.parrent != null && tree.isLeaf + tree.isRoot == tree.covered)
+                return false;
             if (tree.left != null){
-                if (tree.isRoot)
-                    roots.Add(tree);
                 return checkCovereding(ref tree.left, ref roots) &&
                        checkCovereding(ref tree.right, ref roots);
 
@@ -75,7 +76,7 @@ namespace GetEquation
             return true;
         }
 
-        /// проверяем, что можем снять шаблон и условия продолжут выполняться 
+        /// проверяем, что можем снять шаблон и условия продолжат выполняться 
         public static bool couldDelete(Node subTree, ref Node pattern){
             if (subTree.covered > 2){
                 if (pattern.left != null){
