@@ -11,9 +11,10 @@ namespace GetEquation
         public Node(Node parrent){
             this.parrent = parrent;
         }
-        public Node(Node parrent, int high){
+        public Node(Node parrent, int high, int number){
             this.parrent = parrent;
             this.high = high;
+            this.number = number;
         }
         public Node(){
         }
@@ -24,6 +25,7 @@ namespace GetEquation
         public int high = 0;
         public int isRoot = 0;
         public int isLeaf = 0;
+        public int number = 0;
 
         /// покрывает все деревья шаблонами 
         public static void TryCoverAll(ref Node curNode, ref Node pattern){
@@ -77,22 +79,26 @@ namespace GetEquation
         }
 
         /// проверяем, что можем снять шаблон и условия продолжат выполняться 
-        public static bool couldDelete(Node subTree, ref Node pattern){
-            if (subTree.covered > 2){
-                if (pattern.left != null){
-                    return couldDelete(subTree.left, ref pattern.left) && 
-                           couldDelete(subTree.right, ref pattern.right);
-                }
-                return true;
-            }
-            if (subTree.covered == 2){
-                if (subTree.left == null || subTree.parrent == null)
-                    return true;
+        public static bool couldDelete(Node subTree, ref Node pattern) {
+            
+            if (subTree.covered <= 1)
                 return false;
+            
+            // if (tree.left == null)
+            //     return true;
+            
+            if (subTree.isLeaf + subTree.isRoot == subTree.covered - 1) {
+                if (pattern.parrent != null && pattern.left != null) {
+                    return false;
+                }
             }
-            return false;
-        }
 
+            if (pattern.left != null)
+                return couldDelete(subTree.left, ref pattern.left) &&
+                       couldDelete(subTree.right, ref pattern.right);
+            return true;
+        }
+        
         /// снимаем шаблон с дерева
         public static void putOff(Node subTree, ref Node pattern){
             subTree.covered--;
@@ -124,8 +130,8 @@ namespace GetEquation
             if (brackets == "")
                 return;
             int index = close_bracket_index_for_first_break(brackets);
-            curNode.left = new Node(curNode, curNode.high + 1);
-            curNode.right = new Node(curNode, curNode.high + 1);
+            curNode.left = new Node(curNode, curNode.high + 1, 2 * curNode.number + 1);
+            curNode.right = new Node(curNode, curNode.high + 1, 2 * curNode.number + 2);
             
             Transfer(ref curNode.left, brackets.Substring(1, index - 1));
             Transfer(ref curNode.right, brackets.Substring(index + 1, brackets.Length - index - 1));
