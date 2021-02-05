@@ -26,16 +26,20 @@ namespace GetEquation
         public int isRoot = 0;
         public int isLeaf = 0;
         public int number = 0;
+        public int rootNumder = -1;
+        public HashSet<int> roots = new HashSet<int>();
 
         /// покрывает все деревья шаблонами 
-        public static void TryCoverAll(ref Node curNode, ref Node pattern){
+        public static void TryCoverAll(ref Node curNode, ref Node pattern, ref int patternNum){
             if (dfs(ref curNode, ref pattern)){
                 curNode.isRoot++;
-                coveredingDfs(ref curNode, ref pattern);
+                curNode.rootNumder = curNode.number;
+                coveredingDfs(curNode, ref pattern, curNode.rootNumder);
+                // patternNum = curNode.number;
             }
             if (curNode.left != null) {
-                TryCoverAll(ref curNode.left, ref pattern);
-                TryCoverAll(ref curNode.right, ref pattern);
+                TryCoverAll(ref curNode.left, ref pattern, ref patternNum);
+                TryCoverAll(ref curNode.right, ref pattern, ref patternNum);
             }
         }
 
@@ -51,11 +55,12 @@ namespace GetEquation
         }
 
         /// делает одно наложение шаблона и помечает вершины покрытыми 
-        public static void coveredingDfs(ref Node tree, ref Node pattern){
+        public static void coveredingDfs( Node tree, ref Node pattern, int patternNum){
             tree.covered++;
+            tree.roots.Add(patternNum);
             if (pattern.left != null) {
-                coveredingDfs(ref tree.left, ref pattern.left);
-                coveredingDfs(ref tree.right, ref pattern.right);
+                coveredingDfs( tree.left, ref pattern.left, patternNum);
+                coveredingDfs( tree.right, ref pattern.right, patternNum);
             } else 
                 tree.isLeaf++;
         }
@@ -68,31 +73,24 @@ namespace GetEquation
                 return false;
             if (tree.left == null)
                 return true;
-            if (tree.parrent != null && tree.isLeaf + tree.isRoot == tree.covered)
+            if (tree.parrent != null &&  tree.isLeaf + tree.isRoot == tree.covered)
                 return false;
             if (tree.left != null){
                 return checkCovereding(ref tree.left, ref roots) &&
                        checkCovereding(ref tree.right, ref roots);
-
             }
             return true;
         }
 
         /// проверяем, что можем снять шаблон и условия продолжат выполняться 
         public static bool couldDelete(Node subTree, ref Node pattern) {
-            
             if (subTree.covered <= 1)
                 return false;
-            
-            // if (tree.left == null)
-            //     return true;
-            
             if (subTree.isLeaf + subTree.isRoot == subTree.covered - 1) {
                 if (pattern.parrent != null && pattern.left != null) {
                     return false;
                 }
             }
-
             if (pattern.left != null)
                 return couldDelete(subTree.left, ref pattern.left) &&
                        couldDelete(subTree.right, ref pattern.right);
@@ -100,11 +98,14 @@ namespace GetEquation
         }
         
         /// снимаем шаблон с дерева
-        public static void putOff(Node subTree, ref Node pattern){
+        public static void putOff(Node subTree, ref Node pattern, int rootNumber){
             subTree.covered--;
+            subTree.roots.Remove(rootNumber);
             if (pattern.left != null) {
-                    putOff(subTree.left, ref pattern.left);
-                    putOff(subTree.right, ref pattern.right);
+                    putOff(subTree.left, ref pattern.left, rootNumber);
+                    putOff(subTree.right, ref pattern.right, rootNumber);
+            } else {
+                subTree.isLeaf--;
             }
             return;
         }
@@ -135,7 +136,60 @@ namespace GetEquation
             
             Transfer(ref curNode.left, brackets.Substring(1, index - 1));
             Transfer(ref curNode.right, brackets.Substring(index + 1, brackets.Length - index - 1));
-
         }
+
+        public static Node findRoot(Node curNode, int rootNum)
+        {
+            if (curNode.rootNumder == rootNum)
+                return curNode;
+            if (curNode.parrent != null)
+                return findRoot(curNode.parrent, rootNum);
+            throw new IndexOutOfRangeException("don't find root");
+        }
+    
+        // проверяем, что зелёная зона не распадётся без covRoot
+        public static bool checkGreen(Node covRoot, Node delRoot, Node pattern, out Node intetsept) {
+            if (covRoot == delRoot) {
+                intetsept = pattern;
+                return true;
+            } if (covRoot.covered <= 1) {
+                intetsept = new Node();
+                return false;
+            } if (covRoot.isLeaf + covRoot.isRoot == covRoot.covered - 1) {
+                if (pattern.parrent != null && pattern.left != null) {
+                    intetsept = new Node();
+                    return false;
+                }
+            } if (pattern.left != null)
+                return checkGreen(covRoot.left, delRoot, pattern.left, out  intetsept) &&
+                       checkGreen(covRoot.right, delRoot, pattern.right, out  intetsept);
+            intetsept = new Node();
+            return true;
+        }
+
+
+        // public static bool couldChange(Node covRoot, Node delRoot, Node pattern, bool onDel) {
+        //     if (!onDel && covRoot != delRoot)
+        //     {
+        //         if (covRoot.covered <= 1)
+        //             return false;
+        //         if (covRoot.isLeaf + covRoot.isRoot == covRoot.covered - 1) {
+        //             if (pattern.parrent != null && pattern.left != null) {
+        //                 return false;
+        //             }
+        //         }
+        //         if (pattern.left != null)
+        //             return couldChange(covRoot.left, delRoot, pattern.left, onDel) &&
+        //                    couldChange(covRoot.right, delRoot, pattern.right, onDel);
+        //         return true;
+        //     }
+        //
+        //     if (covRoot == delRoot)
+        //     {
+        //         
+        //     }
+        //     
+        // }
+        
     }    
 }

@@ -42,8 +42,7 @@ namespace GetEquation
             Display(ref tree, brackets.Substring(index + 1, brackets.Length - index - 1), 2 * curr + 2);
 
         }
-
-
+        
         static void Main(string[] args)
         {
             // считываем данные
@@ -55,7 +54,6 @@ namespace GetEquation
             int n;
             int.TryParse(Console.ReadLine(), out n);
 
-            // начало цикла по шаблонам 
             string curr_pattern = "";
             string curr_tree;
             for (int i = 0; i < m - 1; i++)
@@ -63,13 +61,14 @@ namespace GetEquation
             for (int i = 0; i < m - 1; i++)
                 curr_pattern += ')';
             
+            // начало цикла по шаблонам 
             while (curr_pattern != "no")
             {
                 // переводим шаблон в класс Node
                 Node pattern = new Node();
                 Node.Transfer(ref pattern, curr_pattern);
 
-                //
+                // отрисовка дерева 
                 bool[] patternLit = new bool[(int)Math.Pow(2, m) - 1];
                 Display(ref patternLit, curr_pattern, 0);
                 curr_pattern = Gen_next(curr_pattern);
@@ -78,16 +77,16 @@ namespace GetEquation
                 //     continue;
                 Console.WriteLine("\nНОВЫЙ ШАБЛОН ");
                 Console.WriteLine(lit.WolframForm());
-                //
                 Console.WriteLine("Деревья с цепями:");
                 
-                // начало цикла по деревьям
                 int cnt = 0;
                 curr_tree = "";
                 for (int i = 0; i < n - 1; i++)
                     curr_tree += '(';
                 for (int i = 0; i < n - 1; i++)
                     curr_tree += ')';
+                
+                // начало цикла по деревьям
                 while (curr_tree != "no")
                 {
                     
@@ -105,20 +104,21 @@ namespace GetEquation
                     Node tree = new Node();
                     Node.Transfer(ref tree, curr_tree);
                     // пытаемся покрыть дерево полностью шаблоном
-                    Node.TryCoverAll(ref tree, ref pattern);
+                    int patternNum = 0;         // номер текущего шаблона
+                    Node.TryCoverAll(ref tree, ref pattern, ref patternNum);
                     // проверяем, что дерево удалось покрыть шаблоном
                     List<Node> roots = new List<Node>();
                     if (!Node.checkCovereding(ref tree, ref roots)){
                         curr_tree = Gen_next(curr_tree);
                         continue;
                     }
-
+                    // вывод массива с вершинами номеров шаблоном 
                     foreach (var root in roots)
                         Console.Write($"{root.number} ");
                     Console.WriteLine();
                     roots = roots.OrderBy(o=>-o.high).ToList();
                     
-                    //
+                    // отрисовка дерева 
                     bool[] treeLit = new bool[(int)Math.Pow(2, n) - 1];
                     Display(ref treeLit, curr_tree, 0);
                     Tree lit2 = new Tree(treeLit);
@@ -127,15 +127,89 @@ namespace GetEquation
  
                     // выкидываем лишнее для построения цепи 
                     List<Node> chain = new List<Node>();
+                    HashSet<Node> allRoots = new HashSet<Node>(roots);
                     for (int i = 0; i < roots.Count; i++){
                         // можем ли выкинуть шаблон?
                         if (Node.couldDelete(roots[i], ref pattern)){
                             roots[i].isRoot = 0;
-                            Node.putOff(roots[i], ref pattern);
+                            Node.putOff(roots[i], ref pattern, roots[i].rootNumder);
+                            roots[i].rootNumder = -1;
                         } else
                             chain.Add(roots[i]);
                     }
                     curr_tree = Gen_next(curr_tree);
+                    
+                    // проверка минимального покрытия но то, что оно цепь
+                    List<Node> delitedRoots = new List<Node>(allRoots.Except(new HashSet<Node>(chain)));
+                    bool isChain = false;
+                    foreach (Node delRoot in delitedRoots) {
+                        isChain = false;
+                        List<int> delRootRoots = new List<int>(delRoot.roots);
+                        foreach (int numCovRoot in delRootRoots) {
+                            Node covRoot = Node.findRoot(delRoot, numCovRoot);
+
+                            // int covRootNum = covRoot.rootNumder;
+                            covRoot.isRoot = 0;
+                            Node.putOff(covRoot, ref pattern, covRoot.rootNumder);
+                            covRoot.rootNumder = -1;
+
+                            delRoot.isRoot++;
+                            delRoot.rootNumder = delRoot.number;
+                            Node.coveredingDfs( delRoot, ref pattern, delRoot.rootNumder);
+
+                            List<Node> _ = new List<Node>();
+                            if (Node.checkCovereding(ref tree, ref _))
+                            {
+                                isChain = true;
+                                break;
+                            }
+                            delRoot.isRoot = 0;
+                            Node.putOff(delRoot, ref pattern, delRoot.rootNumder);
+                            delRoot.rootNumder = -1;
+
+                            covRoot.isRoot++;
+                            covRoot.rootNumder = covRoot.number;
+                            Node.coveredingDfs(covRoot, ref pattern, covRoot.rootNumder);
+
+                            if (!Node.checkCovereding(ref tree, ref _))
+                            {
+                                throw new IndexOutOfRangeException("bug in putOf and coveringDfs !");
+                            }
+
+                            // // ЗЕЛЁНАЯ ЗОНА
+                            // // проверяем, что можно удалить шаблон из covRoot и наложить шаблон из delRoot
+                            // covRoot.isRoot = 0;
+                            // Node intercept;
+                            // if (!Node.checkGreen(covRoot, delRoot, pattern, out intercept)) {
+                            //     covRoot.isRoot = 1;
+                            //     continue;
+                            // }
+                            //
+                            // // КРАЙНИЙ СЛУЧАЙ С ЛИСТОМ
+                            // if (intercept.left == null)
+                            // {
+                            //     if (delRoot.isLeaf - 1 + 1 == delRoot.covered)
+                            //     {
+                            //         continue;
+                            //     }
+                            //     isChain = true;
+                            //     break;
+                            // } else {
+                            //     
+                            //     // КРАСНВЯ ЗОНА
+                            //     
+                            // }
+                        }
+                        if (!isChain)
+                            break;
+                    }
+
+                    if (isChain)
+                    {
+                        Console.WriteLine("это цепь");
+                    }
+                    
+                    // вывод массива с вершинами номеров шаблоном 
                     foreach (var root in chain)
                         Console.Write($"{root.number} ");
                     Console.WriteLine();
