@@ -77,9 +77,8 @@ namespace GetEquation
                 //     continue;
                 Console.WriteLine("\nНОВЫЙ ШАБЛОН ");
                 Console.WriteLine(lit.WolframForm());
-                Console.WriteLine("Деревья с цепями:");
+                Console.WriteLine("Деревья с покрытиями:");
                 
-                int cnt = 0;
                 curr_tree = "";
                 for (int i = 0; i < n - 1; i++)
                     curr_tree += '(';
@@ -113,9 +112,9 @@ namespace GetEquation
                         continue;
                     }
                     // вывод массива с вершинами номеров шаблоном 
-                    foreach (var root in roots)
-                        Console.Write($"{root.number} ");
-                    Console.WriteLine();
+                    // foreach (var root in roots)
+                    //     Console.Write($"{root.number} ");
+                    // Console.WriteLine();
                     roots = roots.OrderBy(o=>-o.high).ToList();
                     
                     // отрисовка дерева 
@@ -141,7 +140,7 @@ namespace GetEquation
                     
                     // проверка минимального покрытия но то, что оно цепь
                     List<Node> delitedRoots = new List<Node>(allRoots.Except(new HashSet<Node>(chain)));
-                    bool isChain = false;
+                    bool isChain = true;
                     foreach (Node delRoot in delitedRoots) {
                         isChain = false;
                         List<int> delRootRoots = new List<int>(delRoot.roots);
@@ -203,20 +202,20 @@ namespace GetEquation
                         if (!isChain)
                             break;
                     }
-
                     if (isChain)
-                    {
                         Console.WriteLine("это цепь");
-                    }
-                    
+
                     // вывод массива с вершинами номеров шаблоном 
+                    Console.Write("номера корней шаблонов: ");
                     foreach (var root in chain)
                         Console.Write($"{root.number} ");
                     Console.WriteLine();
-                    Console.WriteLine("Размер покрытия: " + chain.Count.ToString());
+                    // Console.WriteLine("Размер покрытия: " + chain.Count.ToString());
 
                     // todo: как-нибудь созранить цепь в файл 
                 }
+
+                int a = 1;
             }
         }
     }
